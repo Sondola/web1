@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="css/style.css">
+
+		<title>lab №1</title>
+	</head>
+	<body>
+		<div class="card">
+			<h1>
+				Полежаева Юлия
+				<p>группа P32101</p>
+				<p>вариант 1023</p>
+			</h1>
+		</div>
+		
+		<div class="leftcard">
+			<p>
+				<label for="x_value" >Изменение X:</label>
+				<input id="x_value" type="text" placeholder="(-5 .. 5)" maxlength="5" name="x_value" class="label" required="">
+			</p>
+
+			<p>
+
+				<label for="y_value">Изменение Y: </label>
+
+				<table class="table">
+					<tr>
+						<td>
+							<button id="btn-4" class="button" value="-4">-4</button>
+						</td>
+						<td>
+							<button id="btn-3" class="button" value="-3">-3</button>
+						</td>
+						<td>
+							<button id="btn-2" class="button" value="-2">-2</button>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<button id="btn-1" class="button" value="-1">-1</button>
+						</td>
+						<td>
+							<button id="btn0" class="button" value="0">0</button>
+						</td>
+						<td>
+							<button id="btn1" class="button" value="1">1</button>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<button id="btn2" class="button" value="2">2</button>
+						</td>
+						<td>
+							<button id="btn3" class="button" value="3">3</button>
+						</td>
+						<td>
+							<button id="btn4" class="button" value="4">4</button>
+						</td>
+					</tr>
+				</table>
+
+			</p>
+
+			<p>
+				<label for="r_value">Изменение R:</label>
+
+				<label><input type="checkbox" name="r_value1" value="1">1</label>
+
+				<label><input type="checkbox" name="r_value2" value="2">2</label>
+
+				<label><input type="checkbox" name="r_value3" value="3">3</label>
+
+				<label><input type="checkbox" name="r_value4" value="4">4</label>
+
+				<label><input type="checkbox" name="r_value5" value="5">5</label>
+			</p>
+
+			<p>
+				<input type="submit" id="submit_btn" class="submit_button" value="Отправить">
+			</p>
+		</div>
+
+		<div class="rightcard">
+			<img src="./img/image.png" alt="Задание">
+		</div>
+
+		<div class="card">
+			<table id="table_res" class="table_res" border="1" cellpadding="5" cellspacing="10">
+				<thead>
+					<th>X</th>
+					<th>Y</th>
+					<th>R</th>
+					<th>Попадание</th>
+					<th>Текущее время</th>
+					<th>Время работы скрипта</th>
+				</thead>
+				<tbody>
+
+				</tbody>
+			</table>
+		</div>
+
+		<script type="text/javascript">
+			// получаем объект формы
+			//var form = document.forms.main_form;
+			var x = document.getElementById('x_value');
+			var submit_btn = document.getElementById('submit_btn');
+			var current_time = document.getElementById('current_time');
+			var working_time = document.getElementById('working_time');
+			var table = document.getElementById('table_res');
+			var tbody = table.getElementsByTagName('tbody')[0];
+			var error_msg = "";
+			var pred_button = null;
+
+			var x_value = null;
+			var y_value = null;
+			var r_value = null;
+
+			
+
+			function checkX() {
+				if (/[,\.]/.test(x_value)) {
+			        if (!/^-?\d+[\.,]\d+$/.test(x_value)){
+			            error_msg += "Неправильный формат ввода числа с плавающей точкой X\n";
+			            return false;
+			        }
+			    }
+			    else if (!/^-?\d$/.test(x_value)){
+			        error_msg += "Неправильный формат ввода числа X\n";
+			        return false;
+			    } 
+
+			    var value = x_value;
+			    value = Number(value.replace('\,', '.'));
+			    if (value <= -5 || value >= 5){
+			        error_msg = "Число X не попадает в указанный диапазон\n";
+			        return false;
+			    } 
+			    else return true;
+			}
+
+			function checkY() {
+				if (y_value != null) return true;
+				else {
+					error_msg += "Не выбрано значение Y\n";
+					return false;
+				}
+			}
+
+			function checkR() {
+				var checkboxesChecked = getCheckedCheckBoxes();
+				if (checkboxesChecked.length == 1) {
+					r_value = checkboxesChecked[0];
+					return true;
+				} else if (checkboxesChecked.length == 0) {
+					error_msg += "Не выбрано значение R\n";
+					return false;
+				} else if (checkboxesChecked.length > 1) {
+					error_msg += "Можно выбрать только одно значение R\n";
+					return false;
+				}
+			}
+
+			function getData() {
+				x_value = x.value;
+			}
+
+			var Handler = function(request){
+			    console.log(request.responseText);  
+			    var response = JSON.parse(request.responseText);
+			    if(response.correct == "true"){
+			        updateTable(response);
+			        updateTime(response);
+			    }
+			    else{
+			      alert("Неправильно введены данные");  
+			    }
+			}
+
+			function updateTime(response){
+			    current_time.innerHTML = response.current_time;
+			    working_time.innerHTML = response.working_time + ' мс';
+			}
+
+			function updateTable(response){
+			    var row = document.createElement("tr");
+			    var cell_x = document.createElement("td");
+			    var cell_y = document.createElement("td");
+			    var cell_R = document.createElement("td");
+			    var cell_hit = document.createElement("td");
+			    cell_x.innerHTML = response.x;
+			    cell_y.innerHTML = response.y;
+			    cell_R.innerHTML = response.R;
+			    cell_hit.innerHTML = response.res;
+			    row.appendChild(cell_x);
+			    row.appendChild(cell_y);
+			    row.appendChild(cell_R);
+			    row.appendChild(cell_hit);
+			    tbody.appendChild(row);
+			}
+
+			function sendRequest(r_handler) {
+				var r_path = 'post.php?x=' 
+			        + x_value + '&y='
+			        + y_value + '&R='
+			        + r_value;
+				 
+				var request = new XMLHttpRequest();
+				if (!request) {
+					return;
+				}
+
+				request.open("GET", r_path, true);
+				request.responseType = "text";
+				request.setRequestHeader('Content-Type', 'application/x-www-form-url');
+
+				request.addEventListener("readystatechange", () => {
+					if (request.readyState == 4 && request.status == 200) {
+						r_handler(request);
+					}
+				});
+				//request.onreadystatechange = reqReadyStateChange;
+				request.send();
+			}		
+
+			/* обработчик нажатия
+			function sendRequest(){
+			    var formData = new FormData(form);
+			 
+			    var request = new XMLHttpRequest();
+			 
+			    request.open("POST", form.action);
+			     
+			    request.onreadystatechange = function () {
+			        if (request.readyState == 4 && request.status == 200)
+			            document.getElementById("data").innerHTML=request.responseText;
+			    }
+			    request.send(formData);
+			}*/
+
+			function sendData() {				
+				getData();
+				console.log(x_value + ' ' + y_value + ' ' + r_value);
+
+				var check_X = checkX();
+				var check_Y = checkY();
+				var check_R = checkR();
+
+				console.log(check_X + ' ' + check_Y + ' ' + check_R);
+
+				if (check_X && check_Y && check_R) { 
+					// прикрепляем обработчик кнопки
+					sendRequest(Handler);
+					}
+				else alert(error_msg);
+
+				error_msg = "";
+			}			
+			 
+			submit_btn.addEventListener('click', sendData);
+
+			const btns = document.querySelectorAll('button[id^=btn]');
+
+			btns.forEach(btn => {
+			   btn.addEventListener('click', event => {
+			        y_value = event.target.value;
+			        console.log(event.target.value);
+			        event.target.classList.add("active-btn");
+			        if (pred_button == null) pred_button = event.target;
+			        else { 
+			            pred_button.classList.remove("active-btn");
+			            if(event.target == pred_button){
+			                pred_button = null;
+			                y_value = null;
+			        	}
+			            else pred_button = event.target;
+			    	}
+
+				});
+			});
+
+			/*const checkboxes = document.querySelectorAll('checkbox[name^=r_value]');
+
+			function onlyOne(checkbox) {
+			    checkboxes.forEach(item => {
+			        if (item !== checkbox) item.checked = false;
+				})
+				r_value = event.target.value;
+			}	*/
+
+			function getCheckedCheckBoxes() {
+			    var selectedCheckBoxes = document.querySelectorAll('input[type=checkbox]:checked');
+			    console.log(selectedCheckBoxes);
+			    var checkedValues = Array.from(selectedCheckBoxes).map(cb => cb.value);
+			    console.log(checkedValues);
+			    return checkedValues; // для использования в нужном месте
+			}
+			
+
+		</script>
+	</body>
+</html>
